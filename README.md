@@ -38,7 +38,7 @@ streamlit run app.py
 | **Test Set Macro $F_{0.5}$** | **0.8010** | Evaluated on 1,732,544 test queries across US, India, and France |
 | **5-Fold Cross-Validation $F_{0.5}$** | **0.9556** | Champion Fold-4 validation score on 2.2M training ground truth pairs |
 | **Duplicate Candidate Collisions** | **0 (Zero)** | Bipartite Argmax eliminates 721,000+ false-positive multi-assignments |
-| **Peak Memory Consumption** | **$\le$ 7.0 GB RAM** | Streaming PyArrow Parquet batches of 60,000 pairs |
+| **Peak Memory Consumption** | **≤ 7.0 GB RAM** | Streaming PyArrow Parquet batches of 60,000 pairs |
 | **Multi-Core Throughput** | **28 Parallel Threads** | Scaled across an Intel Core i7-14700HX (20 cores / 28 threads) |
 
 > **Evaluation Metric Note:** The competition evaluates using **Macro-averaged $F_{0.5}$**:
@@ -96,14 +96,14 @@ flowchart TD
 Over 14% of Indian records in candidate sources contained business names written in vernacular Indic scripts (Tamil, Devanagari, Telugu) matching Latin-script reference names. Standard string distances (Levenshtein, Jaccard) scored $0.0$. By extracting phonetic Romanizations on the fly, features `translit_token_sort`, `translit_char_3gram`, and `translit_jaccard` boosted matching accuracy from $0.808$ to $0.9556$ in validation.
 
 ### 2. Address-Anchor Recovery for Synthetic Aliases
-Analysis of ground truth revealed that synthetic corruptions frequently replaced business names with fantasy aliases (e.g. `Maure Williams Colombier Inc` $\rightarrow$ `Dréxkor`) while keeping the physical street address intact (`85 Wayne Avenue, Ticonderoga, NY`). We engineered `high_addr_anchor` and `name_addr_harmonic_mean`, allowing the GBDT ranker to successfully link entities when physical address overlap was near $100\%$ with zero numeric conflict.
+Analysis of ground truth revealed that synthetic corruptions frequently replaced business names with fantasy aliases (e.g. `Maure Williams Colombier Inc` $\rightarrow$ `Dréxkor`) while keeping the physical street address intact (`85 Wayne Avenue, Ticonderoga, NY`). We engineered `high_addr_anchor` and `name_addr_harmonic_mean`, allowing the GBDT ranker to successfully link entities when physical address overlap was near 100% with zero numeric conflict.
 
 ### 3. Global 1-to-1 Bipartite Argmax Matching
 In real-world business registries, every candidate record belongs to **at most one** true reference business. Without bipartite resolution, greedy thresholding matched the same candidate to multiple queries, creating over 721,000 false positives. Our post-processing engine enforces:
-$$\text{cand\_argmax}[c] = \arg\max_{q} P(q, c)$$
+$$\operatorname{Match}(c) = \arg\max_{q} P(q, c)$$
 Filtering candidate assignments through global argmax radically boosted precision on the public leaderboard.
 
-### 4. Zero-Leak Memory Optimization ($\le 7$ GB RAM)
+### 4. Zero-Leak Memory Optimization (≤ 7 GB RAM)
 Processing 1.73M queries against 9.97M candidates produces a raw Cartesian search space of $1.7 \times 10^{13}$ pairs. To operate strictly within laptop RAM constraints:
 * Streaming I/O with **PyArrow Parquet** in 60,000-pair batches.
 * Integer-keyed dictionary lookups (`nid = int(cid[3:])`) replacing string lookups.
